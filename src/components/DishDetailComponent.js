@@ -3,7 +3,8 @@ import { Card, CardImg, CardText, CardBody, CardTitle, Breadcrumb, BreadcrumbIte
 Modal, ModalHeader, ModalBody } from 'reactstrap';
 import { Control, LocalForm, Errors } from 'react-redux-form';
 import { Link } from 'react-router-dom';
-
+import {Loading} from './LoadingComponent';
+import {baseUrl} from '../shared/baseUrl';
 
 class CommentForm extends Component{
  constructor(props){
@@ -23,8 +24,9 @@ class CommentForm extends Component{
 
  handleSubmit(values) {
        this.toggleModal();
-       alert('Current State is: ' + JSON.stringify(values));
+this.props.postComment(this.props.dishId, values.rating, values.author, values.comment);
    }
+
 
    render(){
      const maxLength = (len) => (val) => !(val) || (val.length <= len);
@@ -52,7 +54,7 @@ class CommentForm extends Component{
                    <Row className="form-group">
                       <Col md={10}>
                         <Label htmlFor="username">Your Name</Label>
-                            <Control.text model=".YourName" id="yourname" name="yourname"
+                            <Control.text model=".author" id="author" name="author"
                                 placeholder="Your Name"
                                 className="form-control"
                                 validators={{
@@ -90,7 +92,7 @@ class CommentForm extends Component{
 function RenderDish({dish}){
   return(
     <Card>
-        <CardImg top src={dish.image} alt={dish.name} />
+        <CardImg top src={baseUrl+dish.image} alt={dish.name} />
         <CardBody>
           <CardTitle>{dish.name}</CardTitle>
           <CardText>{dish.description}</CardText>
@@ -103,7 +105,7 @@ function RenderComments({comments}){
 const myComments = comments.map((comment)=>{
       return (
         <>
-        <p>{comment.comment}<br/><br/>---{comment.author}, {new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: '2-digit'}).format(new Date(Date.parse(comment.date)))}</p>
+        <p>{comment.comment}<br/><br/>--- {comment.author}, {new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: '2-digit'}).format(new Date(Date.parse(comment.date)))}</p>
         </>
       )
     });
@@ -111,7 +113,25 @@ const myComments = comments.map((comment)=>{
 }
 
 const DishDetail=(props)=>{
-  if(props.dish!=null){
+  if (props.isLoading) {
+            return(
+                <div className="container">
+                    <div className="row">
+                        <Loading />
+                    </div>
+                </div>
+            );
+        }
+        else if (props.errMess) {
+            return(
+                <div className="container">
+                    <div className="row">
+                        <h4>{props.errMess}</h4>
+                    </div>
+                </div>
+            );
+        }
+  else if(props.dish!=null){
   return(
     <div className="container">
     <div className="row">
@@ -131,7 +151,8 @@ const DishDetail=(props)=>{
     <div  className="col-12 col-md-5 m-1">
     <h2>Comments</h2><br/>
         <RenderComments comments={props.comments}/>
-        <CommentForm />
+        <CommentForm postComment={props.postComment}
+        dishId={props.dish.id}/>
     </div>
   </div>
   </div>
